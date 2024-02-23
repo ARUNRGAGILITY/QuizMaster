@@ -61,11 +61,10 @@ def display_question(question, question_number):
                 # If checkbox is deselected, remove the option index from the response list
                 if (i + 1) in st.session_state[key]:
                     st.session_state[key].remove(i + 1)
-    elif q_type == "SCQ":
-        # Assuming there's no pre-selected option; the first option will be selected by default
+   elif q_type == "SCQ":
+        # Directly store the selected option for SCQ
         selected_option = st.radio(question["question"], options, key=key)
-        # Since options are 1-based indices in your JSON, find the index of the selected option + 1
-        st.session_state[key] = options.index(selected_option) + 1
+        st.session_state[key] = selected_option  # Directly store the selected option
     
     elif q_type == "TF":
         # Handling for True/False questions...
