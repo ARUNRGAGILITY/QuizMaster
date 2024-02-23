@@ -38,10 +38,8 @@ def evaluate_answers(quiz):
 def display_quiz(quiz):
     """Display the quiz questions and evaluate answers on submission."""
     st.subheader(quiz["title"])
-    # Reserve space for the score at the top
-    top_space_left, top_space_right = st.columns([4, 1])
-    score_placeholder = top_space_right.empty()  # This reserves space for the score
 
+ 
     # Display questions in the left (main) column
     with left_col:
         for i, question in enumerate(quiz["questions"], start=1):
@@ -93,7 +91,10 @@ def main():
     # Assuming a base path for demonstration
     base_path = "Quiz"
     
-   
+    # Reserve space for the score at the top
+    top_space_left, top_space_right = st.columns([4, 1])
+    score_placeholder = top_space_right.empty()  # This reserves space for the score
+
 
     # Example for loading a specific quiz - you'll want to replace this with dynamic selection logic
     quiz_path = os.path.join(base_path, "Python", "Basics", "Python_Quiz1.json")
