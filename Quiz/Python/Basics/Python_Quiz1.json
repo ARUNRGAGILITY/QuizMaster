@@ -1,0 +1,28 @@
+{
+    "title": "Python Quiz (Test)",
+    "questions": [
+      {
+        "type": "MCQ",
+        "question": "Which of these are programming languages?",
+        "options": ["HTML", "Python", "CSS", "SQL"],
+        "answers": [2, 4]  // Indices of correct answers (1-based)
+      },
+      {
+        "type": "SCQ",
+        "question": "What does HTML stand for?",
+        "options": ["Hyper Text Markup Language", "High Text Markup Language", "Hyper Tabular Markup Language", "None of the above"],
+        "answer": 1  // Index of the correct answer (1-based)
+      },
+      {
+        "type": "TF",
+        "question": "The Earth is flat.",
+        "answer": "False"
+      },
+      {
+        "type": "YN",
+        "question": "Do you like programming?",
+        "answer": "Yes"
+      }
+    ]
+  }
+  
