@@ -44,37 +44,21 @@ def display_question(question, question_number):
     options = question.get("options", [])
     key = f"answer_{question_number}"  # Unique key for each question's response
 
+    # Handle MCQ and SCQ with single or multiple correct answers
     if q_type == "MCQ":
-        # Use checkboxes for MCQ to allow multiple selections
-        user_responses = []
-        for i, option in enumerate(options):
-            if st.checkbox(option, key=f"{key}_option_{i}"):
-                user_responses.append(i + 1)  # Store 1-based index of selected options
-        st.session_state[key] = user_responses
-
-    elif q_type == "SCQ":
-        # Use radio buttons for SCQ to allow a single selection
-        selected_index = st.radio(question["question"], options, key=key)
-        # Store the 1-based index of the selected option
-        st.session_state[key] = [options.index(selected_index) + 1]
-
-    elif q_type == "TF":
-        # True/False questions treated as SCQ with True/False options
-        tf_options = ["True", "False"]
-        selected_option = st.radio(question["question"], tf_options, key=key)
-        # Store "True" or "False" as the answer
-        st.session_state[key] = selected_option
-
-    elif q_type == "YN":
-        # Yes/No questions treated similarly to TF
-        yn_options = ["Yes", "No"]
-        selected_option = st.radio(question["question"], yn_options, key=key)
-        # Store "Yes" or "No" as the answer
-        st.session_state[key] = selected_option
-
+        correct_answer = question.get("answers", [])
+        if isinstance(correct_answer, list) and len(correct_answer) > 1:  # Multiple correct answers
+            _ = st.multiselect(question["question"], options, key=key)
+        else:  # Single correct answer for MCQ
+            _ = st.radio(question["question"], options, key=key)
+    elif q_type == "SCQ":  # Single Choice Question
+        # Single correct answer, use radio for selection
+        _ = st.radio(question["question"], options, key=key)
+    elif q_type in ["TF", "YN"]:  # True/False and Yes/No Questions
+        yn_options = {"TF": ["True", "False"], "YN": ["Yes", "No"]}
+        _ = st.radio(question["question"], yn_options[q_type], key=key)
     else:
         st.error("Unknown question type")
-
 
 
 # Example usage in Streamlit
