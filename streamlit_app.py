@@ -39,24 +39,36 @@ def display_quiz(quiz):
         st.write(f"Score: {score} out of {total}")
 
 def display_question(question, question_number):
-    """Display a question based on its type and capture the user's response."""
+    """Display a question based on its type and capture the user's response using checkboxes for MCQ."""
     q_type = question.get("type")
     options = question.get("options", [])
-    key = f"answer_{question_number}"  # Unique key for each question's response
+    key_prefix = f"answer_{question_number}_"  # Unique key prefix for each option's response
 
-    # Handle MCQ and SCQ with single or multiple correct answers
     if q_type == "MCQ":
-        correct_answer = question.get("answers", [])
-        if isinstance(correct_answer, list) and len(correct_answer) > 1:  # Multiple correct answers
-            _ = st.multiselect(question["question"], options, key=key)
-        else:  # Single correct answer for MCQ
-            _ = st.radio(question["question"], options, key=key)
-    elif q_type == "SCQ":  # Single Choice Question
-        # Single correct answer, use radio for selection
-        _ = st.radio(question["question"], options, key=key)
-    elif q_type in ["TF", "YN"]:  # True/False and Yes/No Questions
-        yn_options = {"TF": ["True", "False"], "YN": ["Yes", "No"]}
-        _ = st.radio(question["question"], yn_options[q_type], key=key)
+        user_responses = []
+        for i, option in enumerate(options, start=1):
+            # Create a unique key for each checkbox representing an option
+            option_key = f"{key_prefix}{i}"
+            # Render the checkbox and check if it's selected
+            if st.checkbox(option, key=option_key):
+                # If selected, append the option's index (1-based) to the user_responses
+                user_responses.append(i)
+        # Store the indices of selected options in session_state under a consolidated key
+        st.session_state[f"answer_{question_number}"] = user_responses
+
+    elif q_type == "SCQ":
+        # Render a single-choice question using radio buttons
+        selected_index = st.radio(question["question"], options, key=key_prefix)
+        # Store the index of the selected option (1-based)
+        st.session_state[f"answer_{question_number}"] = [selected_index + 1] if selected_index is not None else []
+
+    elif q_type in ["TF", "YN"]:
+        # For True/False and Yes/No questions, map answers to boolean values and use radio buttons
+        yn_options = ["True", "False"] if q_type == "TF" else ["Yes", "No"]
+        selected_option = st.radio(question["question"], yn_options, key=key_prefix)
+        # Store the selected option directly
+        st.session_state[f"answer_{question_number}"] = selected_option
+
     else:
         st.error("Unknown question type")
 
