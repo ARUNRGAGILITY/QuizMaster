@@ -7,22 +7,33 @@ def load_quiz(file_path):
     with open(file_path, 'r') as f:
         return json.load(f)
 
-
 def evaluate_answers(quiz):
     """Evaluate the answers stored in session_state and calculate the score."""
     score = 0
     for i, question in enumerate(quiz["questions"], start=1):
-        user_answer = st.session_state.get(f"answer_{i}", None)
-        correct_answer = question.get("answer", question.get("answers"))
-        if isinstance(correct_answer, list):
-            correct_answer = [question["options"][index-1] for index in correct_answer]
+        user_answers = st.session_state.get(f"answer_{i}", [])
+        question_type = question.get("type")
+        # Handle MCQ and SCQ differently since their correct answers are stored differently
+        if question_type in ["MCQ", "SCQ"]:
+            # For MCQ and SCQ, correct answers are indicated by index/indices
+            correct_indices = question.get("answers") if question_type == "MCQ" else [question.get("answer")]
+            # Convert user_answers to indices for comparison
+            user_indices = user_answers if question_type == "MCQ" else [user_answers]
+            # Check if user_indices match correct_indices (MCQ may have multiple correct answers)
+            if sorted(user_indices) == sorted(correct_indices):
+                score += 1
+        elif question_type in ["TF", "YN"]:
+            # For TF and YN, the answer is directly "True", "False", "Yes", or "No"
+            correct_answer = question.get("answer")
+            # Since user_answers for TF and YN are stored directly as the answer string
+            if user_answers == correct_answer:
+                score += 1
         else:
-            correct_answer = question["options"][correct_answer-1]
-        
-        if user_answer == correct_answer:
-            score += 1
-    
+            st.error(f"Unknown question type: {question_type}")
+
     return score
+
+
 
 def display_quiz(quiz):
     """Display the quiz questions and evaluate answers on submission."""
