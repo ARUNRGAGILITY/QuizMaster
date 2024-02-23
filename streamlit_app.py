@@ -6,41 +6,52 @@ def load_quiz(file_path):
     """Load the quiz JSON from the given file path."""
     with open(file_path, 'r') as f:
         return json.load(f)
-def display_question(question):
-    """Display a question based on its type and collect answers."""
-    q_type = question.get("type")
-    options = question.get("options", [])
-    if q_type == "MCQ":
-        # For multiple choice questions with possibly multiple answers
-        if question.get("multiple_answers", False):
-            answer = st.multiselect(question["question"], options)
-        else:
-            answer = [st.radio(question["question"], options)]
-    elif q_type in ["SCQ", "TF", "YN"]:
-        # Single-choice questions, True/False, and Yes/No can use the same radio button control
-        answer = [st.radio(question["question"], options)]
-    else:
-        st.write("Unknown question type")
-        return None
-    return answer
+
 
 def evaluate_answers(quiz):
-    """Evaluate the answers provided by the user and calculate the score."""
+    """Evaluate the answers stored in session_state and calculate the score."""
     score = 0
-    for question in quiz["questions"]:
-        user_answer = display_question(question)
-        correct_answer = question.get("answer", question.get("answers", []))
-        if user_answer is not None and sorted(user_answer) == sorted(correct_answer if isinstance(correct_answer, list) else [correct_answer]):
+    for i, question in enumerate(quiz["questions"], start=1):
+        user_answer = st.session_state.get(f"answer_{i}", None)
+        correct_answer = question.get("answer", question.get("answers"))
+        if isinstance(correct_answer, list):
+            correct_answer = [question["options"][index-1] for index in correct_answer]
+        else:
+            correct_answer = question["options"][correct_answer-1]
+        
+        if user_answer == correct_answer:
             score += 1
+    
     return score
 
 def display_quiz(quiz):
-    """Display the quiz and evaluate answers."""
+    """Display the quiz questions and evaluate answers on submission."""
     st.subheader(quiz["title"])
+
+    # Display questions
+    for i, question in enumerate(quiz["questions"], start=1):
+        display_question(question, i)
+
+    # Submission button
     if st.button("Submit Quiz"):
         score = evaluate_answers(quiz)
         total = len(quiz["questions"])
         st.write(f"Score: {score} out of {total}")
+
+def display_question(question, question_number):
+    """Display a question and store the user's response in session_state."""
+    q_type = question.get("type")
+    options = question.get("options", [])
+    key = f"answer_{question_number}"  # Unique key for each question's response
+
+    if q_type == "MCQ" and isinstance(question.get("answers"), list):  # Multiple answers
+        st.session_state[key] = st.multiselect(question["question"], options, key=key)
+    elif q_type == "MCQ":  # Single answer
+        st.session_state[key] = [st.radio(question["question"], options, key=key)]
+    else:
+        # Handle other types similarly, adjusting for True/False and Yes/No as needed
+        pass
+
 
 
 # Example usage in Streamlit
