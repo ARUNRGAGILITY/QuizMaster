@@ -44,6 +44,7 @@ def display_question(question, question_number):
     options = question.get("options", [])
     key = f"answer_{question_number}"  # Unique key for each question's response
 
+
     # Reset or initialize the response in session_state
     if key not in st.session_state:
         st.session_state[key] = []
@@ -60,22 +61,21 @@ def display_question(question, question_number):
                 # If checkbox is deselected, remove the option index from the response list
                 if (i + 1) in st.session_state[key]:
                     st.session_state[key].remove(i + 1)
+   elif q_type == "SCQ":
+        # Assuming there's no pre-selected option; the first option will be selected by default
+        selected_option = st.radio(question["question"], options, key=key)
+        # Since options are 1-based indices in your JSON, find the index of the selected option + 1
+        st.session_state[key] = options.index(selected_option) + 1
 
-    # Display SCQs with radio buttons
-    elif q_type == "SCQ":
-        selected_index = st.radio(question["question"], options, key=key, index=0)
-        st.session_state[key] = [options.index(selected_index) + 1]
-
-    # Handle True/False questions
     elif q_type == "TF":
+        # Handling for True/False questions...
         selected_option = st.radio(question["question"], ["True", "False"], key=key)
-        st.session_state[key] = selected_option
+        st.session_state[key] = "True" if selected_option == "True" else "False"
 
-    # Handle Yes/No questions
     elif q_type == "YN":
+        # Handling for Yes/No questions...
         selected_option = st.radio(question["question"], ["Yes", "No"], key=key)
-        st.session_state[key] = selected_option
-
+        st.session_state[key] = "Yes" if selected_option == "Yes" else "No"
     else:
         st.error("Unknown question type")
 
