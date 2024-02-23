@@ -39,15 +39,29 @@ def display_quiz(quiz):
     """Display the quiz questions and evaluate answers on submission."""
     st.subheader(quiz["title"])
 
-    # Display questions
-    for i, question in enumerate(quiz["questions"], start=1):
-        display_question(question, i)
+    # Use columns to create a layout for the score on the top right
+    # Adjust the column weights as needed to align the score to the right
+    left_col, right_col = st.columns([4, 1])
 
-    # Submission button
-    if st.button("Submit Quiz"):
-        score = evaluate_answers(quiz)
-        total = len(quiz["questions"])
-        st.write(f"Score: {score} out of {total}")
+    # Display questions in the left (main) column
+    with left_col:
+        for i, question in enumerate(quiz["questions"], start=1):
+            display_question(question, i)
+
+        # Place the submit button in the main column
+        if st.button("Submit Quiz"):
+            # Calculate the score
+            score = evaluate_answers(quiz)
+            total = len(quiz["questions"])
+            # Use session_state to store the score so we can display it outside the button's conditional block
+            st.session_state['score'] = f"Score: {score} out of {total}"
+
+    # Display the score in the right column, but only after the quiz has been submitted
+    with right_col:
+        if 'score' in st.session_state:
+            st.markdown("##")  # Add some space
+            st.markdown(f"**{st.session_state['score']}**", unsafe_allow_html=True)
+
 
 def display_question(question, question_number):
     """Display a question based on its type and capture the user's response."""
