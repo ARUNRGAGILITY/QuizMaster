@@ -44,37 +44,34 @@ def display_question(question, question_number):
     options = question.get("options", [])
     key = f"answer_{question_number}"  # Unique key for each question's response
 
-
-    # Reset or initialize the response in session_state
-    if key not in st.session_state:
-        st.session_state[key] = []
-
-    # Display MCQs with checkboxes
     if q_type == "MCQ":
+        # Use checkboxes for MCQ to allow multiple selections
+        user_responses = []
         for i, option in enumerate(options):
-            # Render checkbox for each option
             if st.checkbox(option, key=f"{key}_option_{i}"):
-                # If checkbox is selected, add the option index (1-based) to the response list
-                if (i + 1) not in st.session_state[key]:
-                    st.session_state[key].append(i + 1)
-            else:
-                # If checkbox is deselected, remove the option index from the response list
-                if (i + 1) in st.session_state[key]:
-                    st.session_state[key].remove(i + 1)
+                user_responses.append(i + 1)  # Store 1-based index of selected options
+        st.session_state[key] = user_responses
+
     elif q_type == "SCQ":
-        # Directly store the selected option for SCQ
-        selected_option = st.radio(question["question"], options, key=key)
-        st.session_state[key] = selected_option  # Directly store the selected option
+        # Use radio buttons for SCQ to allow a single selection
+        selected_index = st.radio(question["question"], options, key=key)
+        # Store the 1-based index of the selected option
+        st.session_state[key] = [options.index(selected_index) + 1]
 
     elif q_type == "TF":
-        # Handling for True/False questions...
-        selected_option = st.radio(question["question"], ["True", "False"], key=key)
-        st.session_state[key] = "True" if selected_option == "True" else "False"
-    
+        # True/False questions treated as SCQ with True/False options
+        tf_options = ["True", "False"]
+        selected_option = st.radio(question["question"], tf_options, key=key)
+        # Store "True" or "False" as the answer
+        st.session_state[key] = selected_option
+
     elif q_type == "YN":
-        # Handling for Yes/No questions...
-        selected_option = st.radio(question["question"], ["Yes", "No"], key=key)
-        st.session_state[key] = "Yes" if selected_option == "Yes" else "No"
+        # Yes/No questions treated similarly to TF
+        yn_options = ["Yes", "No"]
+        selected_option = st.radio(question["question"], yn_options, key=key)
+        # Store "Yes" or "No" as the answer
+        st.session_state[key] = selected_option
+
     else:
         st.error("Unknown question type")
 
