@@ -11,7 +11,7 @@
         "type": "SCQ",
         "question": "What does HTML stand for?",
         "options": ["Hyper Text Markup Language", "High Text Markup Language", "Hyper Tabular Markup Language", "None of the above"],
-        "answer": [1]
+        "answer": 1
       },
       {
         "type": "TF",
