@@ -46,11 +46,12 @@ def display_question(question, question_number):
 
     # Handle MCQ and SCQ with single or multiple correct answers
     if q_type == "MCQ":
-        correct_answer = question.get("answers", [])
-        if isinstance(correct_answer, list) and len(correct_answer) > 1:  # Multiple correct answers
-            _ = st.multiselect(question["question"], options, key=key)
-        else:  # Single correct answer for MCQ
-            _ = st.radio(question["question"], options, key=key)
+        # Use checkboxes for MCQ to allow multiple selections
+        user_responses = []
+        for i, option in enumerate(options):
+            if st.checkbox(option, key=f"{key}_option_{i}"):
+                user_responses.append(i + 1)  # Store 1-based index of selected options
+        st.session_state[key] = user_responses
     elif q_type == "SCQ":  # Single Choice Question
         # Single correct answer, use radio for selection
         _ = st.radio(question["question"], options, key=key)
