@@ -39,18 +39,25 @@ def display_quiz(quiz):
         st.write(f"Score: {score} out of {total}")
 
 def display_question(question, question_number):
-    """Display a question and store the user's response in session_state."""
+    """Display a question and use the user's response from session_state."""
     q_type = question.get("type")
     options = question.get("options", [])
     key = f"answer_{question_number}"  # Unique key for each question's response
 
-    if q_type == "MCQ" and isinstance(question.get("answers"), list):  # Multiple answers
-        st.session_state[key] = st.multiselect(question["question"], options, key=key)
-    elif q_type == "MCQ":  # Single answer
-        st.session_state[key] = [st.radio(question["question"], options, key=key)]
+    # Display the question based on its type
+    if q_type == "MCQ":
+        # Check if it's a single or multiple answer question
+        correct_answer = question.get("answer", question.get("answers"))
+        if isinstance(correct_answer, list):  # Multiple answers
+            # st.multiselect automatically updates st.session_state[key] with the selected options
+            _ = st.multiselect(question["question"], options, key=key)
+        else:  # Single answer
+            _ = st.radio(question["question"], options, key=key)
+    elif q_type in ["TF", "YN"]:  # Handle True/False and Yes/No
+        tf_options = ["True", "False"] if q_type == "TF" else ["Yes", "No"]
+        _ = st.radio(question["question"], tf_options, key=key)
     else:
-        # Handle other types similarly, adjusting for True/False and Yes/No as needed
-        pass
+        st.error("Unknown question type")
 
 
 
