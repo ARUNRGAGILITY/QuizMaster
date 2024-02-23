@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import json
-
+# working score
 def load_quiz(file_path):
     """Load the quiz JSON from the given file path."""
     with open(file_path, 'r') as f:
