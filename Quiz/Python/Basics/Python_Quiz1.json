@@ -8,6 +8,12 @@
         "answers": [2, 4] 
       },
       {
+        "type": "MCQ",
+        "question": "Which are agile approaches?",
+        "options": ["Scrum", "Kanban", "Scrumban", "Waterfall"],
+        "answers": [1, 2, 3] 
+      },
+      {
         "type": "SCQ",
         "question": "What does HTML stand for?",
         "options": ["Hyper Text Markup Language", "High Text Markup Language", "Hyper Tabular Markup Language", "None of the above"],
