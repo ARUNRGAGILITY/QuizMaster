@@ -12,17 +12,8 @@
         "question": "What does HTML stand for?",
         "options": ["Hyper Text Markup Language", "High Text Markup Language", "Hyper Tabular Markup Language", "None of the above"],
         "answer": 1
-      },
-      {
-        "type": "TF",
-        "question": "The Earth is flat.",
-        "answer": "False"
-      },
-      {
-        "type": "YN",
-        "question": "Do you like programming?",
-        "answer": "Yes"
       }
+    
     ]
   }
   
