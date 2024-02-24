@@ -1,5 +1,7 @@
 {
     "title": "Python Quiz (Test)",
+    "timed": 300,
+    "question_display": "1", 
     "questions": [
       {
         "type": "MCQ",

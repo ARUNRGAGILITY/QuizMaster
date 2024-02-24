@@ -1,5 +1,7 @@
 {
     "title": "Python Quiz (Test)",
+    "timed": 250,
+    "display_question": "all",
     "questions": [
       {
         "type": "MCQ",
@@ -11,6 +13,42 @@
         "type": "SCQ",
         "question": "What does HTML stand for?",
         "options": ["Hyper Text Markup Language", "High Text Markup Language", "Hyper Tabular Markup Language", "None of the above"],
+        "answer": 1
+      },
+      {
+        "type": "SCQ",
+        "question": "What does HTML stand for?",
+        "options": ["Hyper Text Markup Language", "High Text Markup Language", "Hyper Tabular Markup Language", "None of the above"],
+        "answer": 1
+      },
+      {
+        "type": "SCQ",
+        "question": "The Earth is flat.",
+        "options": ["True", "False"],
+        "answer": 2
+      },
+      {
+        "type": "SCQ",
+        "question": "The Moon is round.",
+        "options": ["True", "False"],
+        "answer": 1
+      },
+      {
+        "type": "SCQ",
+        "question": "What does HTML stand for?",
+        "options": ["Hyper Text Markup Language", "High Text Markup Language", "Hyper Tabular Markup Language", "None of the above"],
+        "answer": 1
+      },
+      {
+        "type": "SCQ",
+        "question": "The Earth is flat.",
+        "options": ["True", "False"],
+        "answer": 2
+      },
+      {
+        "type": "SCQ",
+        "question": "The Moon is round.",
+        "options": ["True", "False"],
         "answer": 1
       }
     
