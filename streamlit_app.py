@@ -1,104 +1,123 @@
 import streamlit as st
 import os
 import json
-# working score
-def load_quiz(file_path):
-    """Load the quiz JSON from the given file path."""
-    with open(file_path, 'r') as f:
-        return json.load(f)
 
-def evaluate_answers(quiz):
-    """Evaluate the answers stored in session_state and calculate the score."""
-    score = 0
+def list_topics(base_path="Quiz"):
+    """List all quiz topics."""
+    return [name for name in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, name))]
+
+def list_levels(topic, base_path="Quiz"):
+    """List all levels within a topic."""
+    topic_path = os.path.join(base_path, topic)
+    return [name for name in os.listdir(topic_path) if os.path.isdir(os.path.join(topic_path, name))]
+
+def list_quizzes(topic, level, base_path="Quiz"):
+    """List all quizzes within a level of a topic."""
+    level_path = os.path.join(base_path, topic, level)
+    return [name for name in os.listdir(level_path) if name.endswith('.json')]
+
+def load_quiz(topic, level, quiz_file, base_path="Quiz"):
+    """Load a specific quiz JSON file."""
+    quiz_path = os.path.join(base_path, topic, level, quiz_file)
+    with open(quiz_path, 'r') as file:
+        return json.load(file)
+
+
+def display_questions_and_collect_answers(quiz):
     for i, question in enumerate(quiz["questions"], start=1):
-        user_answers = st.session_state.get(f"answer_{i}", [])
-        question_type = question.get("type")
-        # Handle MCQ and SCQ differently since their correct answers are stored differently
-        if question_type in ["MCQ", "SCQ"]:
-            # For MCQ and SCQ, correct answers are indicated by index/indices
-            correct_indices = question.get("answers") if question_type == "MCQ" else [question.get("answer")]
-            # Convert user_answers to indices for comparison
-            user_indices = user_answers if question_type == "MCQ" else [user_answers]
-            # Check if user_indices match correct_indices (MCQ may have multiple correct answers)
-            if sorted(user_indices) == sorted(correct_indices):
-                score += 1
-        elif question_type in ["TF", "YN"]:
-            # For TF and YN, the answer is directly "True", "False", "Yes", or "No"
-            correct_answer = question.get("answer")
-            # Since user_answers for TF and YN are stored directly as the answer string
-            if user_answers == correct_answer:
-                score += 1
-        else:
-            st.error(f"Unknown question type: {question_type}")
+        key = f"question_{i}"
+        st.markdown(f"#### Q{i}: {question['question']}")
 
-    return score
+        if question["type"] == "MCQ":
+            options = question['options']
+            # Use checkboxes for MCQ to allow multiple selections
+            user_responses = []
+            for i, option in enumerate(options):
+                if st.checkbox(option, key=f"{key}_option_{i}"):
+                    user_responses.append(i + 1)  # Store 1-based index of selected options
+            
 
+        if question["type"] == "SCQ":
+            options = question['options']
+            # Use checkboxes for MCQ to allow multiple selections
+            user_input = st.radio(question["question"], options, key=key)
+            #print(f">>> === {user_input} === <<<")
+            
+def evaluate_answers_and_display_score(quiz):
+    score = 0
+    mcq_answers = {}  # To aggregate MCQ answers since they're spread across multiple keys
 
+    for key, value in st.session_state.items():
+        if key.startswith("question_"):
+            question_num = int(key.split("_")[1])
+            question = quiz["questions"][question_num - 1]
+            
+            # Handle MCQs: Aggregate answers based on question number
+            if question["type"] == "MCQ" and "option" in key:
+                if question_num not in mcq_answers:
+                    mcq_answers[question_num] = []
+                if value:  # If the option was selected (True), store its index
+                    option_index = int(key.split("_")[-1]) + 1
+                    mcq_answers[question_num].append(option_index)
+            
+            # Handle SCQs: Direct comparison since only one answer per question
+            elif question["type"] == "SCQ":
+                correct_answer = question["answer"]
+                selected_answer = None
+                if isinstance(value, str):  # Assuming the answer is stored as the option text
+                    selected_answer = question["options"].index(value) + 1
+                elif isinstance(value, int):  # Or if the answer is stored as an index
+                    selected_answer = value
+                
+                if selected_answer == correct_answer:
+                    score += 1
 
-def display_quiz(quiz):
-    """Display the quiz questions and evaluate answers on submission."""
-    st.subheader(quiz["title"])
+    # Evaluate MCQs now that all options are aggregated
+    for question_num, selected_options in mcq_answers.items():
+        question = quiz["questions"][question_num - 1]
+        correct_answers = question["answers"]
+        print(f">>> === MCQ{correct_answers} === <<<")
+        if sorted(selected_options) == sorted(correct_answers):
+            score += 1
+            #print(f">>> === MCQ{score} === <<<")
+            
 
-    # Use columns to create a layout for the score on the top right
-    # Adjust the column weights as needed to align the score to the right
-    left_col, right_col = st.columns([4, 1])
-
-    # Display questions in the left (main) column
-    with left_col:
-        for i, question in enumerate(quiz["questions"], start=1):
-            display_question(question, i)
-
-        # Place the submit button in the main column
-        if st.button("Submit Quiz"):
-            # Calculate the score
-            score = evaluate_answers(quiz)
-            total = len(quiz["questions"])
-            # Use session_state to store the score so we can display it outside the button's conditional block
-            st.session_state['score'] = f"Score: {score} out of {total}"
-
-    # Display the score in the right column, but only after the quiz has been submitted
-    with right_col:
-        if 'score' in st.session_state:
-            st.markdown("##")  # Add some space
-            st.markdown(f"**{st.session_state['score']}**", unsafe_allow_html=True)
-
-
-def display_question(question, question_number):
-    """Display a question based on its type and capture the user's response."""
-    q_type = question.get("type")
-    options = question.get("options", [])
-    key = f"answer_{question_number}"  # Unique key for each question's response
-
-    # Handle MCQ and SCQ with single or multiple correct answers
-    if q_type == "MCQ":
-        # Use checkboxes for MCQ to allow multiple selections
-        user_responses = []
-        for i, option in enumerate(options):
-            if st.checkbox(option, key=f"{key}_option_{i}"):
-                user_responses.append(i + 1)  # Store 1-based index of selected options
-        st.session_state[key] = user_responses
-    elif q_type == "SCQ":  # Single Choice Question
-        # Single correct answer, use radio for selection
-        _ = st.radio(question["question"], options, key=key)
-    elif q_type in ["TF", "YN"]:  # True/False and Yes/No Questions
-        yn_options = {"TF": ["True", "False"], "YN": ["Yes", "No"]}
-        _ = st.radio(question["question"], yn_options[q_type], key=key)
-    else:
-        st.error("Unknown question type")
+    # Display the score
+    total_questions = len(quiz['questions'])
+    st.metric(label="Score", value=f"{score} / {total_questions}")
 
 
-# Example usage in Streamlit
 def main():
-    st.title("Quiz App")
+    st.sidebar.title("QuizMaster")
 
-    # Assuming a base path for demonstration
-    base_path = "Quiz"
+    # Adjusted Topic selection to include a "Select" prompt
+    topics = ["Select"] + list_topics()  # Prepend "Select" to the list of topics
+    selected_topic = st.sidebar.selectbox("Select a Topic", topics)
 
-    # Example for loading a specific quiz - you'll want to replace this with dynamic selection logic
-    quiz_path = os.path.join(base_path, "Python", "Basics", "Python_Quiz1.json")
-    quiz = load_quiz(quiz_path)
+    # Adjusted Level selection to include a "Select" prompt and conditional display
+    if selected_topic and selected_topic != "Select":
+        levels = ["Select"] + list_levels(selected_topic)
+        selected_level = st.sidebar.selectbox("Select a Level", levels)
 
-    display_quiz(quiz)
+        # Adjusted Quiz selection to include a "Select" prompt and conditional display
+        if selected_level and selected_level != "Select":
+            quizzes = ["Select"] + list_quizzes(selected_topic, selected_level)
+            selected_quiz = st.sidebar.selectbox("Select a Quiz", quizzes)
 
+            # Load and display the selected quiz, ensuring "Select" is not treated as a valid selection
+            if selected_quiz and selected_quiz != "Select":
+                quiz = load_quiz(selected_topic, selected_level, selected_quiz)
+                st.title(quiz["title"])
+                
+                # Display questions and collect answers
+                display_questions_and_collect_answers(quiz)
+
+                # Button to submit answers and evaluate the quiz
+                if st.button('Submit Quiz'):
+                    print(f">>> === {st.session_state}=== <<<")
+                    evaluate_answers_and_display_score(quiz)
+
+
+# Ensure the main function is called when the script is run
 if __name__ == "__main__":
     main()
