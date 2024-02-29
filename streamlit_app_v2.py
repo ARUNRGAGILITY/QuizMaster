@@ -4,69 +4,66 @@ import json
 from datetime import datetime, timedelta
 
 
-# === OBO ===
-
-def display_current_question(quiz, current_index):
-    question = quiz["questions"][current_index]
-    st.write(f"{question}")
-    this_question = question["question"]
-    this_no = current_index + 1
-    st.markdown(f"##### Q{this_no}: {this_question}")
-    options = question['options']
+def display_single_question(question, index):
+    """Displays a single question with options."""
+    st.markdown(f"#### Q{index+1}: {question['question']}")
+    key = f"question_{index}"
     if question["type"] == "MCQ":
-        st.markdown(f"##### {options}")
+            options = question['options']
+            # Use checkboxes for MCQ to allow multiple selections
+            user_responses = []
+            for i, option in enumerate(options):
+                if st.checkbox(option, key=f"{key}_option_{i}"):
+                    user_responses.append(i + 1)  # Store 1-based index of selected options
 
+    if question["type"] == "SCQ":
+        options = question['options']
+        # Use checkboxes for MCQ to allow multiple selections
+        user_input = st.radio(question["question"], options, key=key)
+        #print(f">>> === {user_input} === <<<")
 
-def display_progress_with_text(current, total):
-    """Displays a progress bar with text indicating the current question number out of total questions."""
-    progress_text = f"{current} / {total}"
-    st.write(progress_text)  # Display text like "1/5"
-    progress_value = current / total
-    st.progress(progress_value)
+def display_questions_one_by_one(quiz, total_questions):
+    # Setup for displaying questions one by one
+    current_question_index = st.session_state.get("current_question_index", 0)
+    display_progress(current_question_index + 1, total_questions)
+    display_single_question(quiz["questions"][current_question_index], current_question_index)
+  
+    # Evaluate and display score at the end of the quiz
+    if 'quiz_complete' in st.session_state and st.session_state.quiz_complete:
+        evaluate_answers_and_display_score(quiz)
 
-def display_navigation_buttons(current_index, total_questions):
-    # Create a row with three columns: Previous, Submit, and Next
-    prev_col, submit_col, next_col = st.columns([1, 1, 1], gap="small")
+     
+def display_question_with_navigation(quiz):
+    total_questions = len(quiz["questions"])
+    current_question_index = st.session_state.get("current_question_index", 0)
 
-    # Display "Previous" button if not the first question
-    with prev_col:
-        if current_index > 0:
-            if st.button("Previous"):
+    # Display Navigation Buttons
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if current_question_index > 0:
+            if st.button("Previous", key="prev_button"):
                 st.session_state.current_question_index -= 1
-
-    # "Submit" button centered in the middle column
-    with submit_col:
-        if st.button("Submit"):
-            st.session_state.quiz_complete = True
-
-    # Display "Next" button if not the last question
-    with next_col:
-        if current_index < total_questions - 1:
-            if st.button("Next"):
+    with col3:
+        if current_question_index < total_questions - 1:
+            if st.button("Next", key="next_button"):
                 st.session_state.current_question_index += 1
-
+        else:
+            if st.button("Previous", key="prev_button1"):
+                st.session_state.current_question_index -= 1
+    # Ensure space between navigation buttons and question
     st.write("")
+
+    # # Display Current Question
+    # question = quiz["questions"][current_question_index]
+    # st.markdown(f"#### Q{current_question_index+1}: {question['question']}")
     
 
-
-def display_question_with_navigation(quiz):
-    current_index = st.session_state.get("current_question_index", 0)
-    total_questions = len(quiz["questions"])
-    # Display progress bar with text
-    display_progress_with_text(current_index + 1, total_questions)
-    # Display navigation buttons
-    display_navigation_buttons(current_index, total_questions)
-    display_current_question(quiz, current_index)
-
-
 def setup_quiz_environment(quiz):
-    """Setup initial quiz state including timing and progress, ensuring timer is initialized only once."""
+    """Setup initial quiz state including timing and progress."""
     if 'current_question_index' not in st.session_state:
         st.session_state.current_question_index = 0  # Start with the first question
         st.session_state.score = 0  # Initial score
-
-    # Check if the timer has already been initialized to avoid resetting it
-    if 'timer_initialized' not in st.session_state:
         # Setup timing based on quiz specification
         if quiz.get("timed", "no") != "no":
             st.session_state.is_timed = True
@@ -75,10 +72,6 @@ def setup_quiz_environment(quiz):
             st.session_state.end_time = st.session_state.start_time + timedelta(seconds=st.session_state.time_limit)
         else:
             st.session_state.is_timed = False
-        
-        # Mark the timer as initialized to prevent re-initialization
-        st.session_state.timer_initialized = True
-
 
 def display_progress(current, total):
     """Displays a progress bar based on the current question index and total questions."""
@@ -87,17 +80,10 @@ def display_progress(current, total):
 
 def display_timer(quiz):
     """Displays a timer if the quiz is timed."""
-    # var1 = quiz.get("timed", "no") != "no"
-    # var2 = 'end_time' in st.session_state
-    # st.sidebar.write(f"===== VAR1 {var1} {var2}")
-    if quiz.get("timed", "no") != "no" and 'end_time'  in st.session_state:
-        #st.sidebar.write("==========TIMER=============")
+    if quiz.get("timed", "no") != "no" and 'end_time' in st.session_state:
         time_left = st.session_state.end_time - datetime.now()
-        total_seconds = int(time_left.total_seconds())
-        hours, remainder = divmod(total_seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
         if time_left.total_seconds() > 0:
-            st.sidebar.write(f"Time left: {hours:02d}:{minutes:02d}:{seconds:02d}")
+            st.sidebar.write(f"Time left: {time_left}")
         else:
             st.sidebar.write("Time's up!")
 
@@ -190,6 +176,7 @@ def evaluate_answers_and_display_score(quiz):
     st.metric(label="Score", value=f"{score} / {total_questions}")
     
 
+# Use this function where you handle question display and navigation logic
 
 
 def main():
@@ -229,7 +216,7 @@ def main():
                 # Check if we are displaying questions one at a time
                 if question_display_mode == "1":
                     display_question_with_navigation(quiz)
-                    print(f"One question by question")
+                    display_questions_one_by_one(quiz, total_questions)
                 elif question_display_mode == "all":
                     display_questions_and_collect_answers(quiz) 
                             
