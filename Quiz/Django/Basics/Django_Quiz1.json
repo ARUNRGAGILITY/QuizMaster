@@ -14,14 +14,16 @@
         "answer": 1
       },
       {
-        "type": "TF",
+        "type": "SCQ",
         "question": "The Earth is flat.",
-        "answer": "False"
+        "options": ["True", "False"],
+        "answer": 2
       },
       {
-        "type": "YN",
-        "question": "Do you like programming?",
-        "answer": "Yes"
+        "type": "SCQ",
+        "question": "The Moon is round.",
+        "options": ["True", "False"],
+        "answer": 1
       }
     ]
   }
